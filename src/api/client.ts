@@ -3,7 +3,8 @@ import { useAuthStore } from "../store/authStore";
 
 // ⚠️ IMPORTANTE: Cambia esta IP por la tuya (192.168.100.70)
 // Cuando pruebes en otro WiFi, actualízala.
-export const BASE_URL = "http://192.168.100.14:3000/api";
+// export const BASE_URL = "http://192.168.100.14:3000/api";
+export const BASE_URL = "http://172.20.0.53:3000/api";
 
 export const api = axios.create({
   baseURL: BASE_URL,
