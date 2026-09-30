@@ -1,63 +1,63 @@
 // ============================================================
-// COLORES DE TESIS QUEST
+// COLORES DE TESIS QUEST — Paleta "Aventura Académica"
 // ============================================================
-// Paleta de tinta, papel y colores planos inspirada en aventuras
-// de cómic clásico, sin perder el contraste de una app educativa.
+// Se conservan las claves históricas (ink, brown, red, paper...)
+// como alias para no romper componentes existentes.
 // ============================================================
 
 export const colors = {
   // Primarios
-  primary: '#C93B32',
-  primaryDark: '#8F2924',
-  primaryLight: '#E56A4D',
+  primary: '#5B4FE9',
+  primaryDark: '#4338C7',
+  primaryLight: '#8B82F0',
 
-  // Secundarios
-  secondary: '#3D8B82',
-  secondaryDark: '#28645F',
-  secondaryLight: '#76B7A9',
+  // Secundario / XP dorado
+  secondary: '#FFB020',
+  secondaryDark: '#D98F00',
+  secondaryLight: '#FFD37A',
 
   // Estados
-  success: '#3D8B82',
-  warning: '#E2A52B',
-  error: '#C93B32',
-  info: '#39769B',
+  success: '#2ECC71',
+  warning: '#FFB020',
+  error: '#FF5A5F',
+  info: '#5B4FE9',
 
   // Corazones (vidas)
-  heart: '#C93B32',
-  heartEmpty: '#B9A994',
+  heart: '#FF5A5F',
+  heartEmpty: '#D9D5EA',
 
   // XP y progreso
-  xp: '#E2A52B',
-  xpDark: '#A86D18',
-  progress: '#3D8B82',
-  progressBackground: '#D8C7A6',
+  xp: '#FFB020',
+  xpDark: '#D98F00',
+  progress: '#2ECC71',
+  progressBackground: '#E4E0F5',
 
   // Fondos
-  background: '#F6E9C9',
-  backgroundAlt: '#EAD8B0',
-  card: '#FFF6D9',
-  backgroundOverlay: 'rgba(246, 233, 201, 0.82)',
-  paper: '#E9C979',
-  paperLight: '#F7E6B0',
+  background: '#F5F3FF',
+  backgroundAlt: '#EAE6FB',
+  card: '#FFFFFF',
+  backgroundOverlay: 'rgba(245, 243, 255, 0.82)',
+  paper: '#EDE9FE',
+  paperLight: '#F5F3FF',
 
   // Textos
-  textPrimary: '#1B1714',
-  textSecondary: '#624E3D',
-  textLight: '#927A63',
-  textInverse: '#FFF8E8',
-  ink: '#1B1714',
-  brown: '#624E3D',
-  red: '#C93B32',
-  white: '#FFF8E8',
+  textPrimary: '#1E1B33',
+  textSecondary: '#6B667D',
+  textLight: '#9A96AD',
+  textInverse: '#FFFFFF',
+  ink: '#1E1B33',
+  brown: '#6B667D',
+  red: '#FF5A5F',
+  white: '#FFFFFF',
 
   // Bordes y separadores
-  border: '#C9B58E',
-  borderDark: '#8C735A',
+  border: '#E4E0F5',
+  borderDark: '#C9C3E6',
 
   // Estados de misión
-  misionCompletada: '#10B981',
-  misionEnProgreso: '#F59E0B',
-  misionBloqueada: '#9CA3AF',
+  misionCompletada: '#2ECC71',
+  misionEnProgreso: '#FFB020',
+  misionBloqueada: '#B8B4C9',
 
   // Insignias
   insigniaOro: '#FBBF24',
@@ -65,8 +65,31 @@ export const colors = {
   insigniaBronce: '#B45309',
   insigniaBloqueada: '#E5E7EB',
 
-  // Sombras
-  shadow: '#000000',
+  // Sombras (tintadas con el primary, no gris genérico)
+  shadow: '#5B4FE9',
 } as const;
+
+// Acento dinámico por modalidad (solo cambia headers/detalles)
+export const modalidadColors = {
+  tesis: '#5B4FE9',
+  tesina: '#2EC4B6',
+  monografia: '#FF9F1C',
+  articulo: '#E71D8C',
+} as const;
+
+export type ModalidadClave = keyof typeof modalidadColors;
+
+// Tolerante a mayúsculas, tildes y sufijos ("Artículo científico" → articulo)
+export const getAcento = (modalidad?: string): string => {
+  if (!modalidad) return colors.primary;
+  const clave = modalidad
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const encontrada = (Object.keys(modalidadColors) as ModalidadClave[]).find(
+    (k) => clave.startsWith(k),
+  );
+  return encontrada ? modalidadColors[encontrada] : colors.primary;
+};
 
 export type Colors = typeof colors;

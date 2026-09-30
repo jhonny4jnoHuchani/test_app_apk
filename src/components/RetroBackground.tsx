@@ -1,4 +1,5 @@
-import { ImageBackground, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { MotiView } from 'moti';
+import { Image, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { assets } from '../theme/assets';
 import { colors } from '../theme/colors';
 
@@ -9,37 +10,60 @@ interface Props {
 }
 
 export function RetroBackground({ children, variant = 'app', style }: Props) {
+  const esLogin = variant === 'login';
+
   return (
-    <ImageBackground
-      source={variant === 'login' ? assets.login : assets.fondoRandom}
-      resizeMode="cover"
-      style={[styles.container, style]}
-      imageStyle={variant === 'login' ? styles.loginImage : styles.image}
-    >
+    <View style={[styles.container, style]}>
+      {/* Imagen: fade + zoom-out suave de entrada */}
+      <MotiView
+        from={{ opacity: 0, scale: 1.08 }}
+        animate={{ opacity: esLogin ? 1 : 0.42, scale: 1 }}
+        transition={{ type: 'timing', duration: 900 }}
+        style={StyleSheet.absoluteFill}
+      >
+        <Image
+          source={esLogin ? assets.login : assets.fondoRandom}
+          resizeMode="cover"
+          style={StyleSheet.absoluteFill}
+        />
+      </MotiView>
+
       <View
         pointerEvents="none"
-        style={[styles.tint, variant === 'login' && styles.loginTint]}
+        style={[styles.tint, esLogin && styles.loginTint]}
       />
-      {children}
-    </ImageBackground>
+
+      {/* Contenido: solo fade, para no competir con animaciones propias de cada pantalla */}
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 450, delay: 150 }}
+        style={styles.contenido}
+      >
+        {children}
+      </MotiView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
   },
-  image: {
-    opacity: 0.42,
-  },
-  loginImage: {
-    opacity: 1,
+  contenido: {
+    flex: 1,
   },
   tint: {
-    ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: colors.backgroundOverlay,
   },
   loginTint: {
-    backgroundColor: 'rgba(27, 23, 20, 0.03)',
+    backgroundColor: 'rgba(30, 27, 51, 0.03)',
   },
 });

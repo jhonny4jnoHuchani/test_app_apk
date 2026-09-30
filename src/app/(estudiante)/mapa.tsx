@@ -1,34 +1,56 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
-  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { ActivityIndicator, Text, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import {
   establecerTema,
   listarModalidades,
   Modalidad,
   Nivel,
   obtenerMapa,
-  obtenerMiProgreso
+  obtenerMiProgreso,
 } from '../../api/juego.api';
 import { HeaderLogout } from '../../components/HeaderLogout';
+import { LevelNode, NODE_SIZE_BOSS } from '../../components/LevelNode';
+import { PathConnector } from '../../components/PathConnector';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { Skeleton } from '../../components/Skeleton';
 import { useJuegoStore } from '../../store/juegoStore';
-import { colors } from '../../theme/colors';
+import { colors, getAcento } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Etapa = 'cargando' | 'escribir-tema' | 'mapa' | 'error';
-const AppFlatList: any = FlatList;
+
+const ROW_H = 132; // separación vertical entre nodos
+const PAD_TOP = 24;
+
+// Fondo del mapa: base plana + gradiente sutil hacia el acento
+function FondoAcento({ acento, children }: { acento: string; children: ReactNode }) {
+  return (
+    <View style={styles.mapaContainer}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={[`${acento}00`, `${acento}2E`]}
+        style={StyleSheet.absoluteFill}
+      />
+      {children}
+    </View>
+  );
+}
 
 export default function MapaScreen() {
   const { modalidadId: modalidadIdParam } = useLocalSearchParams<{
     modalidadId?: string;
   }>();
+  const { width } = useWindowDimensions();
 
   const [etapa, setEtapa] = useState<Etapa>('cargando');
   const [modalidades, setModalidades] = useState<Modalidad[]>([]);
@@ -47,7 +69,7 @@ export default function MapaScreen() {
     setMapa,
   } = useJuegoStore();
 
-
+  const acento = getAcento(modalidadActual?.nombre);
 
   // Al montar: resolver modalidad (por URL, por store, o desde la lista)
   useEffect(() => {
@@ -92,10 +114,6 @@ export default function MapaScreen() {
     }
   };
 
-
-
-
-
   const cargarMapa = async (modalidadId: number) => {
     try {
       setEtapa('cargando');
@@ -119,7 +137,6 @@ export default function MapaScreen() {
       } else {
         setEtapa('mapa');
       }
-
     } catch (err: any) {
       setError('No se pudo cargar el mapa');
       setEtapa('error');
@@ -160,74 +177,126 @@ export default function MapaScreen() {
     }
   };
 
+  const irANivel = (item: Nivel) => {
+    if (item.bloqueado) return;
+
+    // Si es Boss → pantalla Boss
+    if (item.tipo === 'boss') {
+      router.push(
+        `/(estudiante)/boss/${item.id}?modalidadId=${modalidadActual?.id}`,
+      );
+      return;
+    }
+
+    // Nivel normal → primera misión
+    if (item.misiones[0]) {
+      router.push(`/(estudiante)/mision/${item.misiones[0].id}`);
+    }
+  };
+
   // ============================================================
   // RENDER SEGÚN ETAPA
   // ============================================================
 
   if (etapa === 'cargando') {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Cargando...</Text>
-      </View>
+      <FondoAcento acento={acento}>
+        <View
+          style={[
+            styles.header,
+            styles.headerSkeleton,
+            { backgroundColor: acento, shadowColor: acento },
+          ]}
+        />
+        <View style={styles.skelLista}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton
+              key={i}
+              width={NODE_SIZE}
+              height={NODE_SIZE}
+              radius={NODE_SIZE / 2}
+              style={{ transform: [{ translateX: [0, 60, 0, -60][i % 4] }] }}
+            />
+          ))}
+        </View>
+      </FondoAcento>
     );
   }
-
-
 
   if (etapa === 'error') {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error}</Text>
-        <PrimaryButton onPress={() => router.replace('/(estudiante)/lobby')}>
-          Volver al lobby
-        </PrimaryButton>
-      </View>
+      <FondoAcento acento={acento}>
+        <View style={styles.center}>
+          <Text style={styles.error}>{error}</Text>
+          <PrimaryButton
+            color={acento}
+            onPress={() => router.replace('/(estudiante)/lobby')}
+          >
+            Volver al lobby
+          </PrimaryButton>
+        </View>
+      </FondoAcento>
     );
   }
-
-
 
   if (etapa === 'escribir-tema') {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Tu tema de investigación
-        </Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>
-          Escribe el tema que quieres investigar en {modalidadActual?.nombre}.
-        </Text>
-        <Text variant="bodyMedium" style={styles.hint}>
-          Ejemplo: "Impacto del uso de redes sociales en la autoestima de
-          adolescentes de colegios privados de Cochabamba, 2025"
-        </Text>
+      <FondoAcento acento={acento}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text variant="headlineMedium" style={[styles.title, { color: acento }]}>
+            Tu tema de investigación
+          </Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>
+            Escribe el tema que quieres investigar en {modalidadActual?.nombre}.
+          </Text>
+          <Text variant="bodyMedium" style={styles.hint}>
+            Ejemplo: "Impacto del uso de redes sociales en la autoestima de
+            adolescentes de colegios privados de Cochabamba, 2025"
+          </Text>
 
-        <TextInput
-          label="Mi tema"
-          value={tema}
-          onChangeText={setTema}
-          mode="outlined"
-          multiline
-          numberOfLines={4}
-          style={styles.input}
-        />
+          <TextInput
+            label="Mi tema"
+            value={tema}
+            onChangeText={setTema}
+            mode="outlined"
+            multiline
+            numberOfLines={4}
+            outlineColor={colors.borderDark}
+            outlineStyle={{ borderRadius: 16 }}
+            activeOutlineColor={acento}
+            style={styles.input}
+          />
 
-        {error ? (
-          <Text style={styles.error}>{error}</Text>
-        ) : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <PrimaryButton onPress={guardarTema} loading={guardandoTema}>
-          Comenzar la aventura
-        </PrimaryButton>
-      </ScrollView>
+          <PrimaryButton color={acento} onPress={guardarTema} loading={guardandoTema}>
+            Comenzar la aventura
+          </PrimaryButton>
+        </ScrollView>
+      </FondoAcento>
     );
   }
 
-  // Etapa MAPA
-  return (
-    <View style={styles.mapaContainer}>
+  // ============================================================
+  // ETAPA MAPA
+  // ============================================================
 
-      <View style={styles.header}>
+  // Nivel actual = el primero disponible que aún no está completado
+  const idActual = niveles.find((n) => !n.completado && !n.bloqueado)?.id;
+
+  // Zig-zag: 0, +A, 0, -A, ... alrededor del centro
+  const amplitud = Math.min(width * 0.22, 90);
+  const puntos = niveles.map((n, i) => ({
+    x: width / 2 + amplitud * Math.sin((i * Math.PI) / 2),
+    y: PAD_TOP + NODE_SIZE_BOSS / 2 + i * ROW_H,
+    completado: n.completado,
+  }));
+  const altoTotal =
+    PAD_TOP + NODE_SIZE_BOSS + Math.max(niveles.length - 1, 0) * ROW_H + 110;
+
+  return (
+    <FondoAcento acento={acento}>
+      <View style={[styles.header, { backgroundColor: acento, shadowColor: acento }]}>
         <View style={styles.headerIzquierda}>
           <Pressable
             onPress={() => router.replace('/(estudiante)/lobby')}
@@ -239,119 +308,73 @@ export default function MapaScreen() {
             {modalidadActual?.nombre?.toUpperCase() ?? 'TESIS'}
           </Text>
 
-          
           <View style={styles.stats}>
-            <Text variant="bodyMedium" style={styles.statText}>
-              ⚡ {xpTotal} XP
-            </Text>
-            <Text variant="bodyMedium" style={styles.statText}>
-              📊 {porcentaje}%
-            </Text>
+            <View style={styles.pill}>
+              <Text style={styles.pillTexto}>⚡ {xpTotal} XP</Text>
+            </View>
+            <View style={styles.pill}>
+              <Text style={styles.pillTexto}>📊 {porcentaje}%</Text>
+            </View>
           </View>
         </View>
         <HeaderLogout titulo="" mostrarPerfil mostrarNotificaciones />
       </View>
 
-
-      <AppFlatList
-        data={niveles}
-        keyExtractor={(item: Nivel) => item.id}
-        contentContainerStyle={styles.listaNiveles}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refrescando}
             onRefresh={refrescarMapa}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[acento]}
+            tintColor={acento}
           />
         }
-        renderItem={({ item }: { item: Nivel }) => (
-          <Pressable
-
-
-            onPress={() => {
-              if (item.bloqueado) return;
-
-              // Si es Boss → pantalla Boss
-              if (item.tipo === 'boss') {
-                router.push(
-                  `/(estudiante)/boss/${item.id}?modalidadId=${modalidadActual?.id}`,
-                );
-                return;
-              }
-
-              // Nivel normal → primera misión
-              if (item.misiones[0]) {
-                router.push(`/(estudiante)/mision/${item.misiones[0].id}`);
-              }
-            }}
-
-
-            style={[
-              styles.nivelCard,
-              item.completado && styles.nivelCompletado,
-              item.bloqueado && styles.nivelBloqueado,
-            ]}
-          >
-            <View style={styles.nivelNumero}>
-              <Text style={styles.nivelNumeroTexto}>
-                {item.completado ? '✓' : item.numero}
-              </Text>
-            </View>
-            <View style={styles.nivelInfo}>
-              <Text
-                variant="titleMedium"
-                style={[
-                  styles.nivelTitulo,
-                  item.bloqueado && styles.nivelTituloBloqueado,
-                ]}
-              >
-                {item.titulo}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={[
-                  styles.nivelDesc,
-                  item.bloqueado && styles.nivelDescBloqueado,
-                ]}
-                numberOfLines={2}
-              >
-                {item.descripcion}
-              </Text>
-            </View>
-
-
-          <Text style={styles.nivelIcono}>
-            {item.completado ? '⭐' : item.bloqueado ? '🔒' : item.tipo === 'boss' ? '👹' : '▶️'}
-          </Text>
-
-
-          </Pressable>
-        )}
-      />
-    </View>
+      >
+        <View style={{ height: altoTotal }}>
+          <PathConnector
+            puntos={puntos}
+            width={width}
+            height={altoTotal}
+            accent={acento}
+          />
+          {niveles.map((n, i) => (
+            <LevelNode
+              key={n.id}
+              index={i}
+              numero={n.numero}
+              titulo={n.titulo}
+              esBoss={n.tipo === 'boss'}
+              completado={n.completado}
+              bloqueado={n.bloqueado}
+              esActual={n.id === idActual}
+              accent={acento}
+              x={puntos[i].x}
+              y={puntos[i].y}
+              onPress={() => irANivel(n)}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </FondoAcento>
   );
 }
+
+const NODE_SIZE = 76;
 
 const styles = StyleSheet.create({
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    marginTop: 16,
-    color: colors.textSecondary,
+    padding: 24,
+    gap: 16,
   },
   container: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: colors.background,
   },
   title: {
-    color: colors.primary,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
@@ -363,31 +386,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 16,
   },
-  modalidades: {
-    gap: 16,
-  },
-  modalidadCard: {
-    padding: 24,
-    borderRadius: 16,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  modalidadCardPressed: {
-    backgroundColor: colors.primaryLight,
-  },
-  modalidadTitle: {
-    color: colors.primary,
-    fontWeight: 'bold',
-  },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.card,
     marginBottom: 16,
   },
   error: {
     color: colors.error,
     marginBottom: 12,
     textAlign: 'center',
+    fontFamily: fonts.bodySemi,
   },
   mapaContainer: {
     flex: 1,
@@ -395,87 +402,42 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: colors.red,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  headerSkeleton: {
+    height: 130,
+  },
+  headerIzquierda: {
+    flex: 1,
   },
   headerTitle: {
     color: colors.textInverse,
-    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   stats: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+    marginTop: 8,
   },
-  statText: {
+  pill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pillTexto: {
     color: colors.textInverse,
-  },
-  listaNiveles: {
-    padding: 16,
-    gap: 12,
-  },
-  nivelCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    backgroundColor: colors.paperLight,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.16,
-    shadowOffset: { width: 3, height: 3 },
-    shadowRadius: 0,
-    elevation: 2,
-  },
-  nivelCompletado: {
-    borderColor: colors.misionCompletada,
-    backgroundColor: '#F0FDF4',
-  },
-  nivelBloqueado: {
-    borderColor: colors.border,
-    backgroundColor: colors.backgroundAlt,
-    opacity: 0.7,
-  },
-  nivelNumero: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  nivelNumeroTexto: {
-    color: colors.textInverse,
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  nivelInfo: {
-    flex: 1,
-  },
-  nivelTitulo: {
-    fontWeight: 'bold',
-    color: colors.textPrimary,
-  },
-  nivelTituloBloqueado: {
-    color: colors.textLight,
-  },
-  nivelDesc: {
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  nivelDescBloqueado: {
-    color: colors.textLight,
-  },
-  nivelIcono: {
-    fontSize: 24,
-    marginLeft: 8,
-  },
-
-  headerIzquierda: {
-    flex: 1,
+    fontFamily: fonts.bodySemi,
+    fontSize: 13,
   },
   backBoton: {
     marginBottom: 4,
@@ -483,6 +445,12 @@ const styles = StyleSheet.create({
   backTexto: {
     color: colors.textInverse,
     fontSize: 13,
+    fontFamily: fonts.bodySemi,
     opacity: 0.9,
+  },
+  skelLista: {
+    alignItems: 'center',
+    gap: 44,
+    paddingTop: 40,
   },
 });

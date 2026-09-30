@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { MotiView } from "moti";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -16,6 +17,9 @@ import { PrimaryButton } from "../../components/PrimaryButton";
 import { RetroBackground } from "../../components/RetroBackground";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { fonts } from "../../theme/typography";
+
+const INPUT_BG = "rgba(255, 255, 255, 0.9)";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -118,7 +122,12 @@ export default function LoginScreen() {
           {/* Espacio superior flexible */}
           <View style={styles.topSpacer} />
 
-          <View style={styles.form}>
+          <MotiView
+            from={{ opacity: 0, translateY: 32 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: "spring", damping: 16, delay: 250 }}
+            style={styles.form}
+          >
             {/* Animación de error flotante */}
             {errorAnimacion && (
               <Animated.View
@@ -146,13 +155,10 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoComplete="email"
               textColor={colors.ink}
-              outlineColor="rgba(0, 0, 0, 0.55)"
+              outlineColor={colors.borderDark}
+              outlineStyle={{ borderRadius: 16 }}
               activeOutlineColor={colors.primary}
-              theme={{
-                colors: {
-                  background: "rgba(255, 246, 217, 0.78)",
-                },
-              }}
+              theme={{ colors: { background: INPUT_BG } }}
               left={<TextInput.Icon icon="email" />}
               style={styles.input}
             />
@@ -166,13 +172,10 @@ export default function LoginScreen() {
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               textColor={colors.ink}
-              outlineColor="rgba(0, 0, 0, 0.55)"
+              outlineColor={colors.borderDark}
+              outlineStyle={{ borderRadius: 16 }}
               activeOutlineColor={colors.primary}
-              theme={{
-                colors: {
-                  background: "rgba(255, 246, 217, 0.78)",
-                },
-              }}
+              theme={{ colors: { background: INPUT_BG } }}
               left={<TextInput.Icon icon="lock" />}
               right={
                 <TextInput.Icon
@@ -199,7 +202,7 @@ export default function LoginScreen() {
                 Inicia sesión
               </Text>
             </View>
-          </View>
+          </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
     </RetroBackground>
@@ -234,8 +237,8 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: "rgba(255, 246, 217, 0.78)",
-    borderRadius: 7,
+    backgroundColor: INPUT_BG,
+    borderRadius: 16,
   },
 
   /* ERROR FLOTANTE */
@@ -262,14 +265,14 @@ const styles = StyleSheet.create({
   },
 
   loginText: {
-    color: colors.brown,
-    fontSize: 12,
-    fontWeight: "600",
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontFamily: fonts.bodySemi,
   },
 
   loginLink: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: "900",
+    fontSize: 15,
+    fontFamily: fonts.titleBold,
   },
 });

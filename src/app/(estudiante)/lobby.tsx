@@ -1,16 +1,19 @@
 import { router, useFocusEffect } from 'expo-router';
+import { MotiView } from 'moti';
 import { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import {
-    ModalidadDelEstudiante,
-    obtenerMisModalidades,
+  ModalidadDelEstudiante,
+  obtenerMisModalidades,
 } from '../../api/juego.api';
+import { GameCard } from '../../components/GameCard';
 import { HeaderLogout } from '../../components/HeaderLogout';
+import { RetroBackground } from '../../components/RetroBackground';
 import { useAuthStore } from '../../store/authStore';
 import { useJuegoStore } from '../../store/juegoStore';
-import { colors } from '../../theme/colors';
-import { RetroBackground } from '../../components/RetroBackground';
+import { colors, getAcento } from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 const EMOJIS: Record<string, string> = {
   monografia: '📝',
@@ -55,9 +58,7 @@ export default function LobbyScreen() {
       descripcion: modalidad.descripcion,
       ordenMundo: modalidad.ordenMundo,
     });
-    router.push(
-      `/(estudiante)/mapa?modalidadId=${modalidad.modalidadId}`,
-    );
+    router.push(`/(estudiante)/mapa?modalidadId=${modalidad.modalidadId}`);
   };
 
   if (cargando) {
@@ -70,146 +71,146 @@ export default function LobbyScreen() {
 
   return (
     <RetroBackground>
-    <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View style={styles.headerIzquierda}>
-          <Text variant="titleLarge" style={styles.headerTitle}>
-            ¡Hola, {usuario?.email?.split('@')[0] ?? 'estudiante'}!
-          </Text>
-          <Text variant="bodySmall" style={styles.headerSubtitle}>
-            Elige un mundo para continuar
-          </Text>
-        </View>
-        <HeaderLogout titulo="" mostrarPerfil mostrarNotificaciones />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl
-            refreshing={cargando}
-            onRefresh={cargar}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {/* ACCESOS RÁPIDOS */}
-        <View style={styles.accesosRapidos}>
-          <Pressable
-            style={styles.accesoBoton}
-            onPress={() => router.push('/(estudiante)/recomendaciones')}
-          >
-            <Text style={styles.accesoIcono}>📌</Text>
-            <Text style={styles.accesoTexto}>Recomendaciones</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.accesoBoton}
-            onPress={() => router.push('/(estudiante)/unirse-grupo')}
-          >
-            <Text style={styles.accesoIcono}>➕</Text>
-            <Text style={styles.accesoTexto}>Unirme a grupo</Text>
-          </Pressable>
+      <View style={styles.container}>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View style={styles.headerIzquierda}>
+            <Text variant="titleLarge" style={styles.headerTitle}>
+              ¡Hola, {usuario?.email?.split('@')[0] ?? 'estudiante'}!
+            </Text>
+            <Text variant="bodySmall" style={styles.headerSubtitle}>
+              Elige un mundo para continuar
+            </Text>
+          </View>
+          <HeaderLogout titulo="" mostrarPerfil mostrarNotificaciones />
         </View>
 
-        {/* ERROR */}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        {/* CARDS DE MODALIDADES */}
-        <Text variant="titleMedium" style={styles.seccion}>
-          Mis mundos de investigación
-        </Text>
-
-        {modalidades.map((m) => {
-          const proximamente = m.totalNiveles === 0;
-          const emoji = EMOJIS[m.nombre] ?? '📘';
-          const completada = m.estado === 'completada';
-          const enProgreso = m.estado === 'en_progreso';
-
-          return (
-            <Pressable
-              key={m.modalidadId}
-              disabled={proximamente}
-              onPress={() => handleEntrar(m)}
-              style={({ pressed }) => [
-                styles.card,
-                completada && styles.cardCompletada,
-                proximamente && styles.cardBloqueada,
-                pressed && !proximamente && styles.cardPressed,
-              ]}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          refreshControl={
+            <RefreshControl
+              refreshing={cargando}
+              onRefresh={cargar}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {/* ACCESOS RÁPIDOS */}
+          <View style={styles.accesosRapidos}>
+            <GameCard
+              style={styles.accesoBoton}
+              contentStyle={styles.accesoContenido}
+              entradaDelay={0}
+              onPress={() => router.push('/(estudiante)/recomendaciones')}
             >
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardEmoji}>{emoji}</Text>
-                <View style={styles.cardTituloBox}>
-                  <Text variant="titleMedium" style={styles.cardTitulo}>
-                    {m.descripcion}
-                  </Text>
-                  <Text variant="bodySmall" style={styles.cardEstado}>
-                    {proximamente
-                      ? '🔒 Próximamente'
-                      : completada
-                      ? '🏆 Completado'
-                      : enProgreso
-                      ? `📊 ${m.porcentaje}% completado`
-                      : '✨ Listo para comenzar'}
-                  </Text>
+              <Text style={styles.accesoIcono}>📌</Text>
+              <Text style={styles.accesoTexto}>Recomendaciones</Text>
+            </GameCard>
+
+            <GameCard
+              style={styles.accesoBoton}
+              contentStyle={styles.accesoContenido}
+              entradaDelay={80}
+              onPress={() => router.push('/(estudiante)/unirse-grupo')}
+            >
+              <Text style={styles.accesoIcono}>➕</Text>
+              <Text style={styles.accesoTexto}>Unirme a grupo</Text>
+            </GameCard>
+          </View>
+
+          {/* ERROR */}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Text variant="titleMedium" style={styles.seccion}>
+            Mis mundos de investigación
+          </Text>
+
+          {/* CARDS DE MODALIDADES */}
+          {modalidades.map((m, i) => {
+            const proximamente = m.totalNiveles === 0;
+            const emoji = EMOJIS[m.nombre] ?? '📘';
+            const completada = m.estado === 'completada';
+            const enProgreso = m.estado === 'en_progreso';
+            const acento = proximamente
+              ? colors.misionBloqueada
+              : completada
+              ? colors.success
+              : getAcento(m.nombre);
+
+            return (
+              <GameCard
+                key={m.modalidadId}
+                accent={acento}
+                disabled={proximamente}
+                entradaDelay={160 + i * 90}
+                onPress={() => handleEntrar(m)}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={[styles.emojiCirculo, { backgroundColor: `${acento}26` }]}>
+                    <Text style={styles.cardEmoji}>{emoji}</Text>
+                  </View>
+                  <View style={styles.cardTituloBox}>
+                    <Text variant="titleMedium" style={styles.cardTitulo}>
+                      {m.descripcion}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.cardEstado}>
+                      {proximamente
+                        ? '🔒 Próximamente'
+                        : completada
+                        ? '🏆 Completado'
+                        : enProgreso
+                        ? `📊 ${m.porcentaje}% completado`
+                        : '✨ Listo para comenzar'}
+                    </Text>
+                  </View>
                 </View>
-              </View>
 
-              {!proximamente && (
-                <>
-                  {/* Barra de progreso */}
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${m.porcentaje}%` },
-                      ]}
-                    />
-                  </View>
+                {!proximamente && (
+                  <>
+                    {/* Barra de progreso animada */}
+                    <View style={styles.progressBar}>
+                      <MotiView
+                        from={{ width: '0%' }}
+                        animate={{ width: `${m.porcentaje}%` }}
+                        transition={{ type: 'timing', duration: 700, delay: 300 + i * 90 }}
+                        style={[styles.progressFill, { backgroundColor: acento }]}
+                      />
+                    </View>
 
-                  {/* Stats */}
-                  <View style={styles.statsRow}>
-                    <Text variant="bodySmall" style={styles.stat}>
-                      ⚡ {m.xpTotal} XP
-                    </Text>
-                    <Text variant="bodySmall" style={styles.stat}>
-                      📚 {m.nivelesCompletados}/{m.totalNiveles} niveles
-                    </Text>
-                  </View>
+                    <View style={styles.statsRow}>
+                      <Text variant="bodySmall" style={styles.stat}>
+                        ⚡ {m.xpTotal} XP
+                      </Text>
+                      <Text variant="bodySmall" style={styles.stat}>
+                        📚 {m.nivelesCompletados}/{m.totalNiveles} niveles
+                      </Text>
+                    </View>
 
-                  {/* Tema */}
-                  {m.temaInvestigacion ? (
-                    <Text
-                      variant="bodySmall"
-                      style={styles.tema}
-                      numberOfLines={2}
-                    >
-                      🔬 {m.temaInvestigacion}
-                    </Text>
-                  ) : (
-                    <Text variant="bodySmall" style={styles.temaVacio}>
-                      Sin tema definido
-                    </Text>
-                  )}
+                    {m.temaInvestigacion ? (
+                      <Text variant="bodySmall" style={styles.tema} numberOfLines={2}>
+                        🔬 {m.temaInvestigacion}
+                      </Text>
+                    ) : (
+                      <Text variant="bodySmall" style={styles.temaVacio}>
+                        Sin tema definido
+                      </Text>
+                    )}
 
-                  {/* Botón implícito */}
-                  <Text style={styles.entrarTexto}>
-                    {enProgreso
-                      ? 'Continuar →'
-                      : completada
-                      ? 'Volver a jugar →'
-                      : 'Comenzar →'}
-                  </Text>
-                </>
-              )}
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
+                    <Text style={[styles.entrarTexto, { color: acento }]}>
+                      {enProgreso
+                        ? 'Continuar →'
+                        : completada
+                        ? 'Volver a jugar →'
+                        : 'Comenzar →'}
+                    </Text>
+                  </>
+                )}
+              </GameCard>
+            );
+          })}
+        </ScrollView>
+      </View>
     </RetroBackground>
   );
 }
@@ -227,17 +228,24 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: colors.red,
+    paddingBottom: 20,
+    backgroundColor: colors.primary,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 6,
   },
   headerIzquierda: {
     flex: 1,
   },
   headerTitle: {
     color: colors.textInverse,
-    fontWeight: 'bold',
   },
   headerSubtitle: {
     color: colors.textInverse,
@@ -246,6 +254,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 16,
+    paddingBottom: 32,
     gap: 16,
   },
   accesosRapidos: {
@@ -254,66 +263,51 @@ const styles = StyleSheet.create({
   },
   accesoBoton: {
     flex: 1,
+  },
+  accesoContenido: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255, 246, 217, 0.92)',
-    borderRadius: 7,
     paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: colors.ink,
+    paddingHorizontal: 8,
   },
   accesoIcono: {
     fontSize: 18,
   },
   accesoTexto: {
+    fontFamily: fonts.bodySemi,
     fontSize: 13,
-    fontWeight: '600',
     color: colors.textPrimary,
   },
   seccion: {
-    fontWeight: 'bold',
     color: colors.textPrimary,
     marginTop: 8,
   },
   error: {
     color: colors.error,
     textAlign: 'center',
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    gap: 10,
-  },
-  cardPressed: {
-    backgroundColor: colors.paperLight,
-  },
-  cardCompletada: {
-    borderColor: colors.success,
-    backgroundColor: '#F0FDF4',
-  },
-  cardBloqueada: {
-    borderColor: colors.border,
-    backgroundColor: colors.backgroundAlt,
-    opacity: 0.6,
+    fontFamily: fonts.bodySemi,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  emojiCirculo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardEmoji: {
-    fontSize: 36,
+    fontSize: 28,
   },
   cardTituloBox: {
     flex: 1,
   },
   cardTitulo: {
-    fontWeight: 'bold',
     color: colors.textPrimary,
   },
   cardEstado: {
@@ -321,15 +315,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   progressBar: {
-    height: 8,
+    height: 10,
     backgroundColor: colors.progressBackground,
-    borderRadius: 4,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   statsRow: {
     flexDirection: 'row',
@@ -337,6 +330,7 @@ const styles = StyleSheet.create({
   },
   stat: {
     color: colors.textSecondary,
+    fontFamily: fonts.bodySemi,
   },
   tema: {
     color: colors.textPrimary,
@@ -347,8 +341,8 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   entrarTexto: {
-    color: colors.primary,
-    fontWeight: 'bold',
+    fontFamily: fonts.titleBold,
+    fontSize: 15,
     textAlign: 'right',
     marginTop: 4,
   },

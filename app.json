@@ -28,12 +28,13 @@
       [
         "expo-splash-screen",
         {
-        "backgroundColor": "#1B1714",
-        "image": "./assets/items/Portada.png",
-        "imageWidth": 320
+          "backgroundColor": "#1B1714",
+          "image": "./assets/items/Portada.png",
+          "imageWidth": 320
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
