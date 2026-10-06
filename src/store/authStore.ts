@@ -1,4 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { logout as logoutApi } from '../api/auth.api';
@@ -30,32 +31,13 @@ interface AuthState {
   logout: () => void;
 }
 
-// ============================================================
-// ADAPTADOR DE SECURESTORE
-// ============================================================
-const secureStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    try {
-      return await SecureStore.getItemAsync(name);
-    } catch {
-      return null;
-    }
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    try {
-      await SecureStore.setItemAsync(name, value);
-    } catch (error) {
-      console.warn('Error guardando en SecureStore:', error);
-    }
-  },
-  removeItem: async (name: string): Promise<void> => {
-    try {
-      await SecureStore.deleteItemAsync(name);
-    } catch (error) {
-      console.warn('Error borrando de SecureStore:', error);
-    }
-  },
-};
+
+
+
+
+
+
+
 
 // ============================================================
 // STORE
@@ -96,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'tesis-quest-auth',
-      storage: createJSONStorage(() => secureStorage),
+      storage: createJSONStorage(() => AsyncStorage),
     },
   ),
 );

@@ -1,5 +1,4 @@
 import { Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { ActivityIndicator, ImageBackground, StyleSheet, View } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { assets } from '../theme/assets';
@@ -7,14 +6,10 @@ import { colors } from '../theme/colors';
 
 export default function Index() {
   const usuario = useAuthStore((state) => state.usuario);
-  const [ready, setReady] = useState(false);
+  const hasHydrated = useAuthStore.persist?.hasHydrated?.() ?? true;
 
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!ready) {
+  // Mientras Zustand termina de cargar el estado desde AsyncStorage
+  if (!hasHydrated) {
     return (
       <ImageBackground source={assets.portada} resizeMode="cover" style={styles.splash}>
         <View style={styles.splashShade} />

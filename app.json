@@ -11,7 +11,10 @@
       "supportsTablet": false,
       "icon": "./assets/expo.icon"
     },
+   
     "android": {
+      "package": "com.desarrollo9.questestudiante",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#F3E4BC",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -45,7 +48,18 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
-    }
+      "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "expo-navigation-bar": {
+        "style": "dark",
+        "hidden": false
+      },
+      "eas": {
+        "projectId": "c7004f06-0cd2-4482-b1f1-c04c99cb7de9"
+      }
+    },
+    "owner": "jhonny_ajno"
   }
 }
