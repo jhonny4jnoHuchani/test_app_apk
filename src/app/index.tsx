@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, ImageBackground, StyleSheet, View } from 'react-native';
 import { useAuthStore } from '../store/authStore';
@@ -6,7 +7,16 @@ import { colors } from '../theme/colors';
 
 export default function Index() {
   const usuario = useAuthStore((state) => state.usuario);
-  const hasHydrated = useAuthStore.persist?.hasHydrated?.() ?? true;
+  const [hasHydrated, setHasHydrated] = useState(
+    useAuthStore.persist?.hasHydrated?.() ?? true
+  );
+
+  useEffect(() => {
+    const unsubFinish = useAuthStore.persist?.onFinishHydration?.(() => setHasHydrated(true));
+    return () => {
+      unsubFinish?.();
+    };
+  }, []);
 
   // Mientras Zustand termina de cargar el estado desde AsyncStorage
   if (!hasHydrated) {
